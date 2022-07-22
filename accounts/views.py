@@ -1,5 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+
+from accounts.tasks import email_to_user
 from accounts.utils import custom_error_response
 from accounts.models import CustomUser
 from accounts.serializers import EditUserSerializer, UserSerializer, CreateUserSerializer
@@ -30,6 +32,10 @@ class UserView(viewsets.ModelViewSet):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            # Call method for email send
+            email = request.data['email']
+            to_list = [email]
+            email_to_user(to_list)
             return Response(status=status.HTTP_201_CREATED, data=serializer.data)
         return custom_error_response(status=status.HTTP_400_BAD_REQUEST, detail=serializer.errors)
 
